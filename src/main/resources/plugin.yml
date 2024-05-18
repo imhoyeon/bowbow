@@ -1,0 +1,4 @@
+name: bowbow
+version: '${version}'
+main: me.shy.bowbow.Bowbow
+api-version: '1.20'
