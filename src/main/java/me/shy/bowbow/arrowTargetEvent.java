@@ -1,15 +1,11 @@
 package me.shy.bowbow;
 
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.Listener;
+import org.bukkit.event.*;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -30,11 +26,9 @@ public class arrowTargetEvent extends Event implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event){
         Player player = event.getPlayer();
-
-
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onProjectileHit(ProjectileHitEvent event) {
 
         // 화살이 아닐경우
@@ -50,9 +44,9 @@ public class arrowTargetEvent extends Event implements Listener {
 
         // 맞은 화살
         AbstractArrow arrow = (AbstractArrow) event.getEntity();
-
         // 쏜사람
         Player player = (Player) arrow.getShooter();
+
         Vector playerLocation = player.getLocation().toVector();
         Vector arrowLocation = arrow.getLocation().toVector();
 
@@ -60,30 +54,36 @@ public class arrowTargetEvent extends Event implements Listener {
         // 왼손에 무엇을 들고있는가
         ItemStack arrowOffHand = player.getInventory().getItemInOffHand();
 
-        // 화살 이름 가져오기
-        String arrowName = arrowOffHand.getItemMeta().getDisplayName();
+        Material material = event.getHitBlock().getType();
 
+        event.getEntity().remove();
 
-
-        // 왼손에 화살이 있는가, 화살 이름이 뭔가 판단해서 맞은 블럭 제거
-        if (calculateLocation(playerLocation,arrowLocation) && event.getHitBlock().getType() == Material.TARGET){
-            if (!arrowOffHand.getType().equals(Material.ARROW)) {
-                player.sendMessage("왼손에 화살을 넣고 쏴주세요.");
-                return;
-            } else if (arrowName.equals("일반 화살")){
-                    hitBlock.setType(Material.AIR);
-            } else if (arrowName.equals("가로 화살")) {
-                removeHorizontalBlocks(hitBlock);
-            } else if (arrowName.equals("세로 화살")) {
-                removeVerticalBlocks(hitBlock);
-            }
-        } else {
-            player.sendMessage("20블럭 이상에서 화살을 발사하거나 과녁 블럭에 화살을 발사해주세요.");
+        if (!calculateLocation(playerLocation,arrowLocation)) {
+            player.sendMessage("20블럭 이상 거리에서 화살을 쏴주세요.");
+            return;
+        }
+        if (material != Material.TARGET) {
+            player.sendMessage("과녁에 화살을 쏴주세요.");
             return;
         }
 
-        event.getEntity().remove();
-        bowWon.remainTargetBlock(player);
+        if (arrowOffHand.getItemMeta() != null) {
+            switch (arrowOffHand.getItemMeta().getDisplayName()) {
+                case "일반 화살" -> {
+                    hitBlock.setType(Material.AIR);
+                }
+                case "가로 화살" -> {
+                    removeHorizontalBlocks(hitBlock);
+                }
+                case "세로 화살" -> {
+                    removeVerticalBlocks(hitBlock);
+                }
+            }
+            if (bowWon.remainTargetBlock() == 0 || bowWon.asda(player)){
+                Bowbow.endGame(player);
+            }
+        }
+
     }
 
     private boolean calculateLocation(Vector playerLocation, Vector arrowLocation){

@@ -16,7 +16,7 @@ public class timer {
             }
         }.runTaskTimer(Bowbow.plugin, 0L, 1L);  // runTaskTimer 메서드는 BukkitRunnable 를 일정 간격으로 실행시킨다
     }                                                       // 플러그인 인스턴스, 지연시간, 반복주기 -> 현재는 매 틱마다 실행
-    public void timerEnd(Player player){                    // 타이머를 종료하는 메서드
+    public static void timerEnd(Player player){             // 타이머를 종료하는 메서드
         if (!timer.isCancelled() && timer != null){         // 타이머가 실행 중인지, 타이머가 null 값인지 확인
             timer.cancel();                                 // 실행 중이라면 타이머를 취소
             timer = null;                                   // timer 변수를 null 로 설정
